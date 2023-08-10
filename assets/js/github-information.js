@@ -36,7 +36,7 @@ function fetchGitHubInformation(event) {
     );
 
     $.when(
-        $.getJSON(`https://api.github.com/users/${username}`) // Load JSON-encoded data from the github server - "when" the value of the username input field matches a user on GitHub
+        $.getJSON(`https://api.github.com/users/${username}`) // Load JSON-encoded data from the github server - "when" we have a response from the GitHub API
     ).then(                                                   // "then" perform the function below
         function(response) {
             var userData = response;
@@ -44,9 +44,9 @@ function fetchGitHubInformation(event) {
         }, function(errorResponse) { // If an error occurs in the "when/then" promise, run this function
             if (errorResponse.status === 404) { // If no user is found on GitHub, display a "user not found" type message using the value of the user's input for the username field
                 $("#gh-user-data").html(`<h2>No info found for user ${username}</h2>`); 
-            } else { // Display an Error message if an error of the error occurs ??
+            } else { // Display an Error message if the status of the errorResponse is NOT a 404 response ("page not found"), e.g a 401 response
                 console.log(errorResponse);
-                $("#gh-user-data").html(`<h2>Error: ${errorResponse.responseJSON.message}</h2>`);
+                $("#gh-user-data").html(`<h2>Error: ${errorResponse.responseJSON.message}</h2>`); // Get the JSON response from our errorResponse variable
             }
         })
 }
