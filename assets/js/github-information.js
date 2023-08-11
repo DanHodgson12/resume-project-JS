@@ -52,8 +52,8 @@ function repoInformationHTML(repos) {
  * This function is called when the user clicks on the username input field
  */
 function fetchGitHubInformation(event) {
-    $("#gh-user-data").html("");
-    $("#gh-repo-data").html("");
+    $("#gh-user-data").html(""); // These statements set the content of the user-data div and the repo-data div to an empty string, which stops
+    $("#gh-repo-data").html(""); // the name and repos of all previous users that we've search for from appearing when the username input field is empty,
 
     var username = $("#gh-username").val(); // Store the value of the username input field in a variable called "username"
     if (!username) { 
@@ -83,15 +83,22 @@ function fetchGitHubInformation(event) {
         }, function(errorResponse) { // If an error occurs in the "when/then" promise, run this function
 
             if (errorResponse.status === 404) { // If no user is found on GitHub - a 404 response/"page not found" - display a "user not found" type message using the value of the user's input for the username field
-                $("#gh-user-data").html(`<h2>No info found for user ${username}</h2>`); 
+                
+                $("#gh-user-data").html(`<h2>No info found for user ${username}</h2>`);
+
             } else if (errorResponse.status === 403) { // If too many API requests are made, show user the time they will be able to make a new request/search for another user
+                
+                console.log(errorResponse);
                 var resetTime = new Date(errorResponse.getResponseHeader('X-RateLimit-Reset')*1000); 
                 $("#gh-user-data").html(`<h4>Too many requests, please wait until ${resetTime.toLocaleTimeString()}</h4>`);
+
             } else { // Display an Error message if the status of the errorResponse is NOT a 404 response ("page not found"), e.g a 401 response
+                
                 console.log(errorResponse);
                 $("#gh-user-data").html(`<h2>Error: ${errorResponse.responseJSON.message}</h2>`); // Get the JSON response from our errorResponse variable
             }
-        })
+        });
 }
 
+// When the page has loaded, display the GitHub profile of the default "value" in the username input field, which would be the user "octocat"
 $(document).ready(fetchGitHubInformation);
