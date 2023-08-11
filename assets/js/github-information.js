@@ -6,7 +6,7 @@ function userInformationHTML(user) {
     return `
     <h2>${user.name}
         <span class="small-name">   
-            (@<a href="${user.html_url}" target="_blank">${user.login}</a>)
+            // (@<a href="${user.html_url}" target="_blank">${user.login}</a>) 
         </span>
     </h2>
     <div class="gh-content">
@@ -15,8 +15,29 @@ function userInformationHTML(user) {
                 <img src="${user.avatar_url}" width="80" height="80" alt="${user.login}">
             </a>
         </div>
-        <p>Followers: ${user.followers} - Following ${user.following} <br> Repos: ${user.public_repos}</p>
+        <p>Followers: ${user.followers} | Following: ${user.following} <br> Repos: ${user.public_repos}</p>
     </div>`;
+}
+
+function repoInformationHTML(repos) {
+    if (repos.length == 0) {
+        return `<div class="clearfix repo-list">No repos!</div>`;
+    }
+
+    var listItemsHTML = repos.map(function(repo) {
+        return `<li>
+                    <a href="${repo.html_url}" target="_blank">${repo.name}</a>
+                </li>`;
+    });
+
+    return `<div class="clearfix repo-list">
+                <p>
+                    <strong>Repo List:</strong>
+                </p>
+                <ul>
+                    ${listItemsHTML.join("\n")}
+                </ul>
+            </div>`;
 }
 
 /**
@@ -36,11 +57,14 @@ function fetchGitHubInformation(event) {
     );
 
     $.when(
-        $.getJSON(`https://api.github.com/users/${username}`) // Load JSON-encoded data from the github server - "when" we have a response from the GitHub API
-    ).then(                                                   // "then" perform the function below
-        function(response) {
-            var userData = response;
+        $.getJSON(`https://api.github.com/users/${username}`), // Load JSON-encoded data from the github server - "when" we have a response from the GitHub API
+        $.getJSON(`https://api.github.com/users/${username}/repos`)  // Gets the repositories for that individual user
+    ).then(                                                   
+        function (firstResponse, secondResponse) { // "then" perform the function below
+            var userData = firstResponse[0];
+            var repoData = secondResponse[0];
             $("#gh-user-data").html(userInformationHTML(userData)); // Sets the user-data div's HTML to the HTML written in the userInformationHTML function, using the response from the input field (if it matches)
+            $("#gh-repo-data").html(repoInformationHTML(repoData)); // Sets the repo-data div's HTML to the HTML written in the repoInformationHTML function, using the user's repo data from GitHub
         }, function(errorResponse) { // If an error occurs in the "when/then" promise, run this function
             if (errorResponse.status === 404) { // If no user is found on GitHub, display a "user not found" type message using the value of the user's input for the username field
                 $("#gh-user-data").html(`<h2>No info found for user ${username}</h2>`); 
