@@ -44,6 +44,9 @@ function repoInformationHTML(repos) {
  * This function is called when the user clicks on the username input field
  */
 function fetchGitHubInformation(event) {
+    $("#gh-user-data").html("");
+    $("#gh-repo-data").html("");
+
     var username = $("#gh-username").val(); // Store the value of the username input field in a variable called "username"
     if (!username) { 
         $("#gh-user-data").html(`<h2>Please enter a GitHub username</h2>`); // If the username field is empty, set the user-data div to display some HTML
@@ -74,3 +77,5 @@ function fetchGitHubInformation(event) {
             }
         })
 }
+
+$(document).ready(fetchGitHubInformation);
