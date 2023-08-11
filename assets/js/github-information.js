@@ -19,17 +19,25 @@ function userInformationHTML(user) {
     </div>`;
 }
 
+/**
+ * This function displays the user's repositories, using the ARRAY returned from the second '$.getJSON' call in our "when/then" function - i.e. an array of the user's repos
+ */
 function repoInformationHTML(repos) {
-    if (repos.length == 0) {
+    // If the user has no repositories - i.e. checks it the array returned is empty - display the following HTML
+    if (repos.length == 0) {  
         return `<div class="clearfix repo-list">No repos!</div>`;
     }
 
-    var listItemsHTML = repos.map(function(repo) {
+    // Otherwise, perform the below code
+    var listItemsHTML = repos.map(function(repo) { // The .map() method iterates through the array and the function within the method gets each item and adds certain properties of the item (the repo)
+                                                   // into an <li> element, using the GitHub API's 'keys', i.e. "html_url" (the html of the repo)
         return `<li>
                     <a href="${repo.html_url}" target="_blank">${repo.name}</a>
                 </li>`;
     });
 
+    // Then, display a <div> with a heading, and an unordered list cotaining the result from the .map function (this was stored in the variable 'listItemsHTML')
+    // Using .join("\n"), we join each <li> element returned and add a new line
     return `<div class="clearfix repo-list">
                 <p>
                     <strong>Repo List:</strong>
@@ -59,20 +67,25 @@ function fetchGitHubInformation(event) {
         </div>`
     );
 
-    $.when(
-        $.getJSON(`https://api.github.com/users/${username}`), // Load JSON-encoded data from the github server - "when" we have a response from the GitHub API
-        $.getJSON(`https://api.github.com/users/${username}/repos`)  // Gets the repositories for that individual user
-    ).then(                                                   
-        function (firstResponse, secondResponse) { // "then" perform the function below
-            var userData = firstResponse[0];
-            var repoData = secondResponse[0];
+    $.when( // "when" we have a response from the GitHub API
+        $.getJSON(`https://api.github.com/users/${username}`), // Load JSON-encoded data from the github server that returns the user (this will be the 'firstResponse' in the function below)
+        $.getJSON(`https://api.github.com/users/${username}/repos`)  // Get the repositories for that user - THIS INFORMATION IS RETURNED AS AN ARRAY - (this will be the 'secondResponse' in the function below)
+
+    ).then( // "then" perform the function below                                             
+        function (firstResponse, secondResponse) { 
+
+            var userData = firstResponse[0];  // When calling for two responses, each response is made into an array of two items 
+            var repoData = secondResponse[0]; // Using indexing, take the first value of each array and assign it to its own variable for ease of use
+
             $("#gh-user-data").html(userInformationHTML(userData)); // Sets the user-data div's HTML to the HTML written in the userInformationHTML function, using the response from the input field (if it matches)
             $("#gh-repo-data").html(repoInformationHTML(repoData)); // Sets the repo-data div's HTML to the HTML written in the repoInformationHTML function, using the user's repo data from GitHub
+
         }, function(errorResponse) { // If an error occurs in the "when/then" promise, run this function
-            if (errorResponse.status === 404) { // If no user is found on GitHub, display a "user not found" type message using the value of the user's input for the username field
+
+            if (errorResponse.status === 404) { // If no user is found on GitHub - a 404 response/"page not found" - display a "user not found" type message using the value of the user's input for the username field
                 $("#gh-user-data").html(`<h2>No info found for user ${username}</h2>`); 
-            } else if (errorResponse.status === 403) {
-                var resetTime = new Date(errorResponse.getResponseHeader('X-RateLimit-Reset')*1000);
+            } else if (errorResponse.status === 403) { // If too many API requests are made, show user the time they will be able to make a new request/search for another user
+                var resetTime = new Date(errorResponse.getResponseHeader('X-RateLimit-Reset')*1000); 
                 $("#gh-user-data").html(`<h4>Too many requests, please wait until ${resetTime.toLocaleTimeString()}</h4>`);
             } else { // Display an Error message if the status of the errorResponse is NOT a 404 response ("page not found"), e.g a 401 response
                 console.log(errorResponse);
